@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { asyncHandler } from '../middleware/asyncHandler';
 import { createEntrySchema, updateEntrySchema } from './entries.schema';
-import { createEntry, getEntryById, listEntries, updateEntry } from './entries.service';
+import { createEntry, deleteEntry, getEntryById, listEntries, updateEntry } from './entries.service';
 
 export const entriesRouter = Router();
 
@@ -22,6 +22,18 @@ entriesRouter.get(
       return;
     }
     res.json(entry);
+  })
+);
+
+entriesRouter.delete(
+  '/:id',
+  asyncHandler(async (req, res) => {
+    const deleted = await deleteEntry(req.params.id);
+    if (!deleted) {
+      res.status(404).json({ error: 'Entry not found' });
+      return;
+    }
+    res.status(204).send();
   })
 );
 

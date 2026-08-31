@@ -1,4 +1,7 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import { prisma } from '../db';
+import { uploadsDir } from '../uploads';
 import type { CreateEntryInput, UpdateEntryInput } from './entries.schema';
 
 function shapeEntry(entry: {
@@ -82,4 +85,26 @@ export async function updateEntry(id: string, input: UpdateEntryInput) {
   });
 
   return shapeEntry(entry);
+}
+
+export async function deleteEntry(id: string) {
+  const existing = await prisma.journalEntry.findUnique({
+    where: { id },
+    include: { photos: true },
+  });
+  if (!existing) return false;
+
+  await prisma.journalEntry.delete({ where: { id } });
+
+  await Promise.all(
+    existing.photos.map(async (photo) => {
+      try {
+        await fs.unlink(path.join(uploadsDir, photo.filePath));
+      } catch (err) {
+        console.warn(`Failed to remove photo file ${photo.filePath}`, err);
+      }
+    })
+  );
+
+  return true;
 }
