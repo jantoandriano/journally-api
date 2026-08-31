@@ -7,6 +7,7 @@ import { uploadsDir } from '../src/uploads';
 beforeEach(async () => {
   await prisma.photo.deleteMany();
   await prisma.orderItem.deleteMany();
+  await prisma.entryAttribute.deleteMany();
   await prisma.journalEntry.deleteMany();
 });
 

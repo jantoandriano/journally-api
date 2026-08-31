@@ -10,12 +10,16 @@ export const createEntrySchema = z.object({
       z.object({
         name: z.string().min(1),
         price: z.number().positive().optional(),
+        note: z.string().min(1).optional(),
       })
     )
     .default([]),
   lat: z.number().min(-90).max(90).optional(),
   lng: z.number().min(-180).max(180).optional(),
   placeId: z.string().min(1).optional(),
+  notes: z.string().optional(),
+  rating: z.number().min(0).max(5).optional(),
+  attributes: z.array(z.string().min(1)).default([]),
 });
 
 export type CreateEntryInput = z.infer<typeof createEntrySchema>;

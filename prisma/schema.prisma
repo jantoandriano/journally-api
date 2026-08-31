@@ -18,14 +18,25 @@ model JournalEntry {
   lat          Float?
   lng          Float?
   placeId      String?
+  notes        String?
+  rating       Float?
   orderItems   OrderItem[]
   photos       Photo[]
+  attributes   EntryAttribute[]
 }
 
 model OrderItem {
   id      String       @id @default(uuid())
   name    String
   price   Float?
+  note    String?
+  entryId String
+  entry   JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+}
+
+model EntryAttribute {
+  id      String       @id @default(uuid())
+  name    String
   entryId String
   entry   JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
 }

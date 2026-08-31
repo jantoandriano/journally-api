@@ -15,8 +15,11 @@ function shapeEntry(entry: {
   lat: number | null;
   lng: number | null;
   placeId: string | null;
-  orderItems: { name: string; price: number | null }[];
+  notes: string | null;
+  rating: number | null;
+  orderItems: { name: string; price: number | null; note: string | null }[];
   photos: { filePath: string }[];
+  attributes: { name: string }[];
 }) {
   return {
     id: entry.id,
@@ -29,8 +32,16 @@ function shapeEntry(entry: {
     lat: entry.lat,
     lng: entry.lng,
     placeId: entry.placeId,
-    orderItems: entry.orderItems.map((item) => ({ name: item.name, price: item.price })),
+    notes: entry.notes,
+    rating: entry.rating,
+    orderItems: entry.orderItems.map((item) => ({
+      name: item.name,
+      price: item.price,
+      note: item.note,
+    })),
     photoUrls: entry.photos.map((photo) => `/uploads/${photo.filePath}`),
+    photoCount: entry.photos.length,
+    attributes: entry.attributes.map((attribute) => attribute.name),
   };
 }
 
@@ -44,11 +55,20 @@ export async function createEntry(input: CreateEntryInput) {
       ...(input.lat !== undefined ? { lat: input.lat } : {}),
       ...(input.lng !== undefined ? { lng: input.lng } : {}),
       ...(input.placeId !== undefined ? { placeId: input.placeId } : {}),
+      ...(input.notes !== undefined ? { notes: input.notes } : {}),
+      ...(input.rating !== undefined ? { rating: input.rating } : {}),
       orderItems: {
-        create: input.orderItems.map((item) => ({ name: item.name, price: item.price })),
+        create: input.orderItems.map((item) => ({
+          name: item.name,
+          price: item.price,
+          note: item.note,
+        })),
+      },
+      attributes: {
+        create: input.attributes.map((name) => ({ name })),
       },
     },
-    include: { orderItems: true, photos: true },
+    include: { orderItems: true, photos: true, attributes: true },
   });
 
   return shapeEntry(entry);
@@ -56,7 +76,7 @@ export async function createEntry(input: CreateEntryInput) {
 
 export async function listEntries() {
   const entries = await prisma.journalEntry.findMany({
-    include: { orderItems: true, photos: true },
+    include: { orderItems: true, photos: true, attributes: true },
     orderBy: { visitedAt: 'desc' },
   });
   return entries.map(shapeEntry);
@@ -65,7 +85,7 @@ export async function listEntries() {
 export async function getEntryById(id: string) {
   const entry = await prisma.journalEntry.findUnique({
     where: { id },
-    include: { orderItems: true, photos: true },
+    include: { orderItems: true, photos: true, attributes: true },
   });
   return entry ? shapeEntry(entry) : null;
 }
@@ -84,16 +104,30 @@ export async function updateEntry(id: string, input: UpdateEntryInput) {
       ...(input.lat !== undefined ? { lat: input.lat } : {}),
       ...(input.lng !== undefined ? { lng: input.lng } : {}),
       ...(input.placeId !== undefined ? { placeId: input.placeId } : {}),
+      ...(input.notes !== undefined ? { notes: input.notes } : {}),
+      ...(input.rating !== undefined ? { rating: input.rating } : {}),
       ...(input.orderItems !== undefined
         ? {
             orderItems: {
               deleteMany: {},
-              create: input.orderItems.map((item) => ({ name: item.name, price: item.price })),
+              create: input.orderItems.map((item) => ({
+                name: item.name,
+                price: item.price,
+                note: item.note,
+              })),
+            },
+          }
+        : {}),
+      ...(input.attributes !== undefined
+        ? {
+            attributes: {
+              deleteMany: {},
+              create: input.attributes.map((name) => ({ name })),
             },
           }
         : {}),
     },
-    include: { orderItems: true, photos: true },
+    include: { orderItems: true, photos: true, attributes: true },
   });
 
   return shapeEntry(entry);

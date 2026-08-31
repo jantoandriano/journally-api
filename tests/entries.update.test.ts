@@ -18,7 +18,7 @@ describe('PATCH /entries/:id', () => {
     expect(res.status).toBe(200);
     expect(res.body.placeName).toBe('Blue Bottle Coffee');
     expect(res.body.neighborhood).toBe('Hayes Valley');
-    expect(res.body.orderItems).toEqual([{ name: 'Latte', price: 4.5 }]);
+    expect(res.body.orderItems).toEqual([{ name: 'Latte', price: 4.5, note: null }]);
   });
 
   it('updates lat/lng/placeId', async () => {
