@@ -15,6 +15,9 @@ model JournalEntry {
   visitedAt    DateTime    @default(now())
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
+  lat          Float?
+  lng          Float?
+  placeId      String?
   orderItems   OrderItem[]
   photos       Photo[]
 }

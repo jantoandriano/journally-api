@@ -12,6 +12,9 @@ function shapeEntry(entry: {
   visitedAt: Date;
   createdAt: Date;
   updatedAt: Date;
+  lat: number | null;
+  lng: number | null;
+  placeId: string | null;
   orderItems: { name: string }[];
   photos: { filePath: string }[];
 }) {
@@ -23,6 +26,9 @@ function shapeEntry(entry: {
     visitedAt: entry.visitedAt,
     createdAt: entry.createdAt,
     updatedAt: entry.updatedAt,
+    lat: entry.lat,
+    lng: entry.lng,
+    placeId: entry.placeId,
     orderItems: entry.orderItems.map((item) => item.name),
     photoUrls: entry.photos.map((photo) => `/uploads/${photo.filePath}`),
   };
@@ -35,6 +41,9 @@ export async function createEntry(input: CreateEntryInput) {
       neighborhood: input.neighborhood,
       city: input.city,
       ...(input.visitedAt ? { visitedAt: input.visitedAt } : {}),
+      ...(input.lat !== undefined ? { lat: input.lat } : {}),
+      ...(input.lng !== undefined ? { lng: input.lng } : {}),
+      ...(input.placeId !== undefined ? { placeId: input.placeId } : {}),
       orderItems: {
         create: input.orderItems.map((name) => ({ name })),
       },
@@ -72,6 +81,9 @@ export async function updateEntry(id: string, input: UpdateEntryInput) {
       ...(input.neighborhood !== undefined ? { neighborhood: input.neighborhood } : {}),
       ...(input.city !== undefined ? { city: input.city } : {}),
       ...(input.visitedAt !== undefined ? { visitedAt: input.visitedAt } : {}),
+      ...(input.lat !== undefined ? { lat: input.lat } : {}),
+      ...(input.lng !== undefined ? { lng: input.lng } : {}),
+      ...(input.placeId !== undefined ? { placeId: input.placeId } : {}),
       ...(input.orderItems !== undefined
         ? {
             orderItems: {
