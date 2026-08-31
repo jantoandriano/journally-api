@@ -152,7 +152,7 @@ prisma/*.db-journal
 - [ ] **Step 4: Create `.env.example`**
 
 ```
-DATABASE_URL="file:./prisma/dev.db"
+DATABASE_URL="file:./dev.db"
 PORT=3000
 ```
 
@@ -281,7 +281,7 @@ model Photo {
 - [ ] **Step 2: Create `.env`** (local file, gitignored — not committed)
 
 ```
-DATABASE_URL="file:./prisma/dev.db"
+DATABASE_URL="file:./dev.db"
 PORT=3000
 ```
 
@@ -343,7 +343,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     env: {
-      DATABASE_URL: 'file:./prisma/test.db',
+      DATABASE_URL: 'file:./test.db',
     },
     globalSetup: './tests/globalSetup.ts',
     setupFiles: ['./tests/setup.ts'],
@@ -358,7 +358,7 @@ import { execSync } from 'node:child_process';
 
 export default function setup() {
   execSync('npx prisma db push --skip-generate', {
-    env: { ...process.env, DATABASE_URL: 'file:./prisma/test.db' },
+    env: { ...process.env, DATABASE_URL: 'file:./test.db' },
     stdio: 'inherit',
   });
 }

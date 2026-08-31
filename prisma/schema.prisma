@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model JournalEntry {
+  id           String      @id @default(uuid())
+  placeName    String
+  neighborhood String
+  city         String
+  visitedAt    DateTime    @default(now())
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  orderItems   OrderItem[]
+  photos       Photo[]
+}
+
+model OrderItem {
+  id      String       @id @default(uuid())
+  name    String
+  entryId String
+  entry   JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+}
+
+model Photo {
+  id        String       @id @default(uuid())
+  filePath  String
+  entryId   String
+  entry     JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+}
