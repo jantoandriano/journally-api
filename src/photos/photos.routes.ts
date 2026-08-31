@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { asyncHandler } from '../middleware/asyncHandler';
-import { addPhoto, upload } from './photos.service';
+import { addPhoto, deletePhoto, upload } from './photos.service';
 
 export const photosRouter = Router({ mergeParams: true });
 
@@ -28,5 +28,17 @@ photosRouter.post(
     }
 
     res.status(201).json(photo);
+  })
+);
+
+photosRouter.delete(
+  '/:photoId',
+  asyncHandler(async (req, res) => {
+    const deleted = await deletePhoto(req.params.entryId, req.params.photoId);
+    if (!deleted) {
+      res.status(404).json({ error: 'Photo not found' });
+      return;
+    }
+    res.status(204).send();
   })
 );

@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
+import { unlink } from 'node:fs/promises';
 import path from 'node:path';
 import multer from 'multer';
 import { prisma } from '../db';
@@ -38,4 +39,19 @@ export async function addPhoto(entryId: string, filePath: string) {
   });
 
   return { id: photo.id, url: `/uploads/${photo.filePath}` };
+}
+
+export async function deletePhoto(entryId: string, photoId: string) {
+  const photo = await prisma.photo.findFirst({ where: { id: photoId, entryId } });
+  if (!photo) return false;
+
+  await prisma.photo.delete({ where: { id: photo.id } });
+
+  try {
+    await unlink(path.join(uploadsDir, photo.filePath));
+  } catch (err) {
+    console.warn(`Failed to remove photo file ${photo.filePath}`, err);
+  }
+
+  return true;
 }
