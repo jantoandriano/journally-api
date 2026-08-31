@@ -347,6 +347,9 @@ export default defineConfig({
     },
     globalSetup: './tests/globalSetup.ts',
     setupFiles: ['./tests/setup.ts'],
+    // Test files share one physical SQLite file (test.db); running them
+    // concurrently races beforeEach cleanup against another file's writes.
+    fileParallelism: false,
   },
 });
 ```

@@ -1,9 +1,29 @@
 import { Router } from 'express';
 import { asyncHandler } from '../middleware/asyncHandler';
 import { createEntrySchema } from './entries.schema';
-import { createEntry } from './entries.service';
+import { createEntry, getEntryById, listEntries } from './entries.service';
 
 export const entriesRouter = Router();
+
+entriesRouter.get(
+  '/',
+  asyncHandler(async (_req, res) => {
+    const entries = await listEntries();
+    res.json(entries);
+  })
+);
+
+entriesRouter.get(
+  '/:id',
+  asyncHandler(async (req, res) => {
+    const entry = await getEntryById(req.params.id);
+    if (!entry) {
+      res.status(404).json({ error: 'Entry not found' });
+      return;
+    }
+    res.json(entry);
+  })
+);
 
 entriesRouter.post(
   '/',

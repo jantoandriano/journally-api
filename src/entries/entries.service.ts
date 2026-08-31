@@ -41,3 +41,19 @@ export async function createEntry(input: CreateEntryInput) {
 
   return shapeEntry(entry);
 }
+
+export async function listEntries() {
+  const entries = await prisma.journalEntry.findMany({
+    include: { orderItems: true, photos: true },
+    orderBy: { visitedAt: 'desc' },
+  });
+  return entries.map(shapeEntry);
+}
+
+export async function getEntryById(id: string) {
+  const entry = await prisma.journalEntry.findUnique({
+    where: { id },
+    include: { orderItems: true, photos: true },
+  });
+  return entry ? shapeEntry(entry) : null;
+}
