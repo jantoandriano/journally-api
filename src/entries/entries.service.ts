@@ -1,5 +1,5 @@
 import { prisma } from '../db';
-import type { CreateEntryInput } from './entries.schema';
+import type { CreateEntryInput, UpdateEntryInput } from './entries.schema';
 
 function shapeEntry(entry: {
   id: string;
@@ -56,4 +56,30 @@ export async function getEntryById(id: string) {
     include: { orderItems: true, photos: true },
   });
   return entry ? shapeEntry(entry) : null;
+}
+
+export async function updateEntry(id: string, input: UpdateEntryInput) {
+  const existing = await prisma.journalEntry.findUnique({ where: { id } });
+  if (!existing) return null;
+
+  const entry = await prisma.journalEntry.update({
+    where: { id },
+    data: {
+      ...(input.placeName !== undefined ? { placeName: input.placeName } : {}),
+      ...(input.neighborhood !== undefined ? { neighborhood: input.neighborhood } : {}),
+      ...(input.city !== undefined ? { city: input.city } : {}),
+      ...(input.visitedAt !== undefined ? { visitedAt: input.visitedAt } : {}),
+      ...(input.orderItems !== undefined
+        ? {
+            orderItems: {
+              deleteMany: {},
+              create: input.orderItems.map((name) => ({ name })),
+            },
+          }
+        : {}),
+    },
+    include: { orderItems: true, photos: true },
+  });
+
+  return shapeEntry(entry);
 }
