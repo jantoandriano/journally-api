@@ -15,7 +15,7 @@ function shapeEntry(entry: {
   lat: number | null;
   lng: number | null;
   placeId: string | null;
-  orderItems: { name: string }[];
+  orderItems: { name: string; price: number | null }[];
   photos: { filePath: string }[];
 }) {
   return {
@@ -29,7 +29,7 @@ function shapeEntry(entry: {
     lat: entry.lat,
     lng: entry.lng,
     placeId: entry.placeId,
-    orderItems: entry.orderItems.map((item) => item.name),
+    orderItems: entry.orderItems.map((item) => ({ name: item.name, price: item.price })),
     photoUrls: entry.photos.map((photo) => `/uploads/${photo.filePath}`),
   };
 }
@@ -45,7 +45,7 @@ export async function createEntry(input: CreateEntryInput) {
       ...(input.lng !== undefined ? { lng: input.lng } : {}),
       ...(input.placeId !== undefined ? { placeId: input.placeId } : {}),
       orderItems: {
-        create: input.orderItems.map((name) => ({ name })),
+        create: input.orderItems.map((item) => ({ name: item.name, price: item.price })),
       },
     },
     include: { orderItems: true, photos: true },
@@ -88,7 +88,7 @@ export async function updateEntry(id: string, input: UpdateEntryInput) {
         ? {
             orderItems: {
               deleteMany: {},
-              create: input.orderItems.map((name) => ({ name })),
+              create: input.orderItems.map((item) => ({ name: item.name, price: item.price })),
             },
           }
         : {}),

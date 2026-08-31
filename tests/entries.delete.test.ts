@@ -9,7 +9,7 @@ describe('DELETE /entries/:id', () => {
       placeName: 'Blue Bottle',
       neighborhood: 'Hayes Valley',
       city: 'San Francisco',
-      orderItems: ['Latte'],
+      orderItems: [{ name: 'Latte', price: 4.5 }],
     });
 
     const res = await request(app).delete(`/entries/${created.body.id}`);

@@ -8,7 +8,10 @@ describe('POST /entries', () => {
       placeName: 'Blue Bottle',
       neighborhood: 'Hayes Valley',
       city: 'San Francisco',
-      orderItems: ['Oat milk latte', 'Croissant'],
+      orderItems: [
+        { name: 'Oat milk latte', price: 5.5 },
+        { name: 'Croissant' },
+      ],
     });
 
     expect(res.status).toBe(201);
@@ -16,10 +19,24 @@ describe('POST /entries', () => {
       placeName: 'Blue Bottle',
       neighborhood: 'Hayes Valley',
       city: 'San Francisco',
-      orderItems: ['Oat milk latte', 'Croissant'],
+      orderItems: [
+        { name: 'Oat milk latte', price: 5.5 },
+        { name: 'Croissant', price: null },
+      ],
       photoUrls: [],
     });
     expect(res.body.id).toEqual(expect.any(String));
+  });
+
+  it('rejects a negative order item price', async () => {
+    const res = await request(app).post('/entries').send({
+      placeName: 'Blue Bottle',
+      neighborhood: 'Hayes Valley',
+      city: 'San Francisco',
+      orderItems: [{ name: 'Latte', price: -1 }],
+    });
+
+    expect(res.status).toBe(400);
   });
 
   it('accepts and stores optional lat/lng/placeId', async () => {

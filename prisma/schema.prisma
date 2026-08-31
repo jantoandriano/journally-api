@@ -25,6 +25,7 @@ model JournalEntry {
 model OrderItem {
   id      String       @id @default(uuid())
   name    String
+  price   Float?
   entryId String
   entry   JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
 }

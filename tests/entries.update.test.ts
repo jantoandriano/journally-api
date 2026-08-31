@@ -8,7 +8,7 @@ describe('PATCH /entries/:id', () => {
       placeName: 'Blue Bottle',
       neighborhood: 'Hayes Valley',
       city: 'San Francisco',
-      orderItems: ['Latte'],
+      orderItems: [{ name: 'Latte', price: 4.5 }],
     });
 
     const res = await request(app)
@@ -18,7 +18,7 @@ describe('PATCH /entries/:id', () => {
     expect(res.status).toBe(200);
     expect(res.body.placeName).toBe('Blue Bottle Coffee');
     expect(res.body.neighborhood).toBe('Hayes Valley');
-    expect(res.body.orderItems).toEqual(['Latte']);
+    expect(res.body.orderItems).toEqual([{ name: 'Latte', price: 4.5 }]);
   });
 
   it('updates lat/lng/placeId', async () => {
