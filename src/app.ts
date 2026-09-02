@@ -1,3 +1,4 @@
+import cors from 'cors';
 import express from 'express';
 import { entriesRouter } from './entries/entries.routes';
 import { errorHandler } from './middleware/errorHandler';
@@ -6,6 +7,7 @@ import { uploadsDir } from './uploads';
 
 export const app = express();
 
+app.use(cors());
 app.use(express.json());
 
 app.use('/entries/:entryId/photos', photosRouter);
