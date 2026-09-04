@@ -4,3 +4,4 @@ uploads/
 prisma/*.db
 prisma/*.db-journal
 .env
+.superpowers/
