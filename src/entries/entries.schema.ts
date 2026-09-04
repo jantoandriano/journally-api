@@ -27,3 +27,11 @@ export type CreateEntryInput = z.infer<typeof createEntrySchema>;
 export const updateEntrySchema = createEntrySchema.partial();
 
 export type UpdateEntryInput = z.infer<typeof updateEntrySchema>;
+
+export const nearbyEntryQuerySchema = z.object({
+  lat: z.coerce.number().min(-90).max(90),
+  lng: z.coerce.number().min(-180).max(180),
+  radiusKm: z.coerce.number().positive().default(5),
+});
+
+export type NearbyEntryQuery = z.infer<typeof nearbyEntryQuerySchema>;

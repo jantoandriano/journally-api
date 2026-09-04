@@ -1,7 +1,14 @@
 import { Router } from 'express';
 import { asyncHandler } from '../middleware/asyncHandler';
-import { createEntrySchema, updateEntrySchema } from './entries.schema';
-import { createEntry, deleteEntry, getEntryById, listEntries, updateEntry } from './entries.service';
+import { createEntrySchema, nearbyEntryQuerySchema, updateEntrySchema } from './entries.schema';
+import {
+  createEntry,
+  deleteEntry,
+  getEntryById,
+  listEntries,
+  listNearbyEntries,
+  updateEntry,
+} from './entries.service';
 
 export const entriesRouter = Router();
 
@@ -9,6 +16,20 @@ entriesRouter.get(
   '/',
   asyncHandler(async (_req, res) => {
     const entries = await listEntries();
+    res.json(entries);
+  })
+);
+
+entriesRouter.get(
+  '/nearby',
+  asyncHandler(async (req, res) => {
+    const parsed = nearbyEntryQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Invalid query', details: parsed.error.issues });
+      return;
+    }
+
+    const entries = await listNearbyEntries(parsed.data);
     res.json(entries);
   })
 );

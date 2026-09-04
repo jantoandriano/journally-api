@@ -1,8 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { prisma } from '../db';
+import { boundingBoxDeltas, haversineKm } from '../shared/geo';
 import { uploadsDir } from '../uploads';
-import type { CreateEntryInput, UpdateEntryInput } from './entries.schema';
+import type { CreateEntryInput, NearbyEntryQuery, UpdateEntryInput } from './entries.schema';
 
 function shapeEntry(entry: {
   id: string;
@@ -131,6 +132,30 @@ export async function updateEntry(id: string, input: UpdateEntryInput) {
   });
 
   return shapeEntry(entry);
+}
+
+export async function listNearbyEntries(query: NearbyEntryQuery) {
+  const { lat, lng, radiusKm } = query;
+  const { latDelta, lngDelta } = boundingBoxDeltas(radiusKm, lat);
+
+  const entries = await prisma.journalEntry.findMany({
+    where: {
+      // `lat`/`lng` are nullable on JournalEntry — entries without them are
+      // naturally excluded here since a range comparison against NULL is
+      // never true, so no explicit not-null clause is needed.
+      lat: { gte: lat - latDelta, lte: lat + latDelta },
+      lng: { gte: lng - lngDelta, lte: lng + lngDelta },
+    },
+    include: { orderItems: true, photos: true, attributes: true },
+  });
+
+  return entries
+    .map((entry) => ({
+      ...shapeEntry(entry),
+      distanceKm: haversineKm(lat, lng, entry.lat as number, entry.lng as number),
+    }))
+    .filter((entry) => entry.distanceKm <= radiusKm)
+    .sort((a, b) => a.distanceKm - b.distanceKm);
 }
 
 export async function deleteEntry(id: string) {
