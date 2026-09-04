@@ -48,3 +48,24 @@ model Photo {
   entry     JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
   createdAt DateTime     @default(now())
 }
+
+model Sighting {
+  id        String          @id @default(uuid())
+  species   String          // "cat" | "dog", validated in Zod
+  lat       Float
+  lng       Float
+  notes     String?
+  fed       Boolean         @default(false)
+  fedAt     DateTime?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  photos    SightingPhoto[]
+}
+
+model SightingPhoto {
+  id         String   @id @default(uuid())
+  filePath   String
+  sightingId String
+  sighting   Sighting @relation(fields: [sightingId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+}
