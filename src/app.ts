@@ -3,6 +3,7 @@ import express from 'express';
 import { entriesRouter } from './entries/entries.routes';
 import { errorHandler } from './middleware/errorHandler';
 import { photosRouter } from './photos/photos.routes';
+import { sightingPhotosRouter } from './sighting-photos/sightingPhotos.routes';
 import { sightingsRouter } from './sightings/sightings.routes';
 import { uploadsDir } from './uploads';
 
@@ -13,6 +14,7 @@ app.use(express.json());
 
 app.use('/entries/:entryId/photos', photosRouter);
 app.use('/entries', entriesRouter);
+app.use('/sightings/:sightingId/photos', sightingPhotosRouter);
 app.use('/sightings', sightingsRouter);
 app.use('/uploads', express.static(uploadsDir));
 
