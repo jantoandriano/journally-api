@@ -1,5 +1,8 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import { prisma } from '../db';
-import type { CreateSightingInput } from './sightings.schema';
+import { uploadsDir } from '../uploads';
+import type { CreateSightingInput, UpdateSightingInput } from './sightings.schema';
 
 function shapeSighting(sighting: {
   id: string;
@@ -55,4 +58,47 @@ export async function getSightingById(id: string) {
     include: { photos: true },
   });
   return sighting ? shapeSighting(sighting) : null;
+}
+
+export async function updateSighting(id: string, input: UpdateSightingInput) {
+  const existing = await prisma.sighting.findUnique({ where: { id } });
+  if (!existing) return null;
+
+  const sighting = await prisma.sighting.update({
+    where: { id },
+    data: {
+      ...(input.species !== undefined ? { species: input.species } : {}),
+      ...(input.lat !== undefined ? { lat: input.lat } : {}),
+      ...(input.lng !== undefined ? { lng: input.lng } : {}),
+      ...(input.notes !== undefined ? { notes: input.notes } : {}),
+      ...(input.fed !== undefined
+        ? { fed: input.fed, fedAt: input.fed ? new Date() : null }
+        : {}),
+    },
+    include: { photos: true },
+  });
+
+  return shapeSighting(sighting);
+}
+
+export async function deleteSighting(id: string) {
+  const existing = await prisma.sighting.findUnique({
+    where: { id },
+    include: { photos: true },
+  });
+  if (!existing) return false;
+
+  await prisma.sighting.delete({ where: { id } });
+
+  await Promise.all(
+    existing.photos.map(async (photo) => {
+      try {
+        await fs.unlink(path.join(uploadsDir, photo.filePath));
+      } catch (err) {
+        console.warn(`Failed to remove photo file ${photo.filePath}`, err);
+      }
+    })
+  );
+
+  return true;
 }
