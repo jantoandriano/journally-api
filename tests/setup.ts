@@ -8,6 +8,8 @@ beforeEach(async () => {
   await prisma.photo.deleteMany();
   await prisma.orderItem.deleteMany();
   await prisma.entryAttribute.deleteMany();
+  await prisma.sightingPhoto.deleteMany();
+  await prisma.sighting.deleteMany();
   await prisma.journalEntry.deleteMany();
 });
 
