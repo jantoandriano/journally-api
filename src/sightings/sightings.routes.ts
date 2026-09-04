@@ -1,10 +1,15 @@
 import { Router } from 'express';
 import { asyncHandler } from '../middleware/asyncHandler';
-import { createSightingSchema, updateSightingSchema } from './sightings.schema';
+import {
+  createSightingSchema,
+  nearbySightingQuerySchema,
+  updateSightingSchema,
+} from './sightings.schema';
 import {
   createSighting,
   deleteSighting,
   getSightingById,
+  listNearbySightings,
   listSightings,
   updateSighting,
 } from './sightings.service';
@@ -15,6 +20,20 @@ sightingsRouter.get(
   '/',
   asyncHandler(async (_req, res) => {
     const sightings = await listSightings();
+    res.json(sightings);
+  })
+);
+
+sightingsRouter.get(
+  '/nearby',
+  asyncHandler(async (req, res) => {
+    const parsed = nearbySightingQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Invalid query', details: parsed.error.issues });
+      return;
+    }
+
+    const sightings = await listNearbySightings(parsed.data);
     res.json(sightings);
   })
 );

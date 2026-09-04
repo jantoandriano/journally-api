@@ -2,7 +2,22 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { prisma } from '../db';
 import { uploadsDir } from '../uploads';
-import type { CreateSightingInput, UpdateSightingInput } from './sightings.schema';
+import type {
+  CreateSightingInput,
+  NearbySightingQuery,
+  UpdateSightingInput,
+} from './sightings.schema';
+
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
 function shapeSighting(sighting: {
   id: string;
@@ -101,4 +116,27 @@ export async function deleteSighting(id: string) {
   );
 
   return true;
+}
+
+export async function listNearbySightings(query: NearbySightingQuery) {
+  const { lat, lng, radiusKm, species } = query;
+  const latDelta = radiusKm / 111;
+  const lngDelta = radiusKm / (111 * Math.max(Math.cos((lat * Math.PI) / 180), 1e-6));
+
+  const sightings = await prisma.sighting.findMany({
+    where: {
+      lat: { gte: lat - latDelta, lte: lat + latDelta },
+      lng: { gte: lng - lngDelta, lte: lng + lngDelta },
+      ...(species !== undefined ? { species } : {}),
+    },
+    include: { photos: true },
+  });
+
+  return sightings
+    .map((sighting) => ({
+      ...shapeSighting(sighting),
+      distanceKm: haversineKm(lat, lng, sighting.lat, sighting.lng),
+    }))
+    .filter((sighting) => sighting.distanceKm <= radiusKm)
+    .sort((a, b) => a.distanceKm - b.distanceKm);
 }
