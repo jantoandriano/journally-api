@@ -1,5 +1,8 @@
+import { unlink } from 'node:fs/promises';
+import path from 'node:path';
 import { Router } from 'express';
 import { asyncHandler } from '../middleware/asyncHandler';
+import { uploadsDir } from '../uploads';
 import { addSightingPhoto, deleteSightingPhoto, upload } from './sightingPhotos.service';
 
 export const sightingPhotosRouter = Router({ mergeParams: true });
@@ -23,6 +26,11 @@ sightingPhotosRouter.post(
 
     const photo = await addSightingPhoto(req.params.sightingId, req.file.filename);
     if (!photo) {
+      try {
+        await unlink(path.join(uploadsDir, req.file.filename));
+      } catch (err) {
+        console.warn(`Failed to remove orphaned photo file ${req.file.filename}`, err);
+      }
       res.status(404).json({ error: 'Sighting not found' });
       return;
     }

@@ -1,6 +1,8 @@
+import fs from 'node:fs/promises';
 import request from 'supertest';
 import { describe, it, expect } from 'vitest';
 import { app } from '../src/app';
+import { uploadsDir } from '../src/uploads';
 
 async function createSighting() {
   const res = await request(app).post('/sightings').send({ species: 'cat', lat: 0, lng: 0 });
@@ -47,6 +49,22 @@ describe('POST /sightings/:sightingId/photos', () => {
       });
 
     expect(res.status).toBe(404);
+  });
+
+  it('does not leave an orphaned file on disk when the sighting is unknown', async () => {
+    const before = await fs.readdir(uploadsDir);
+
+    const res = await request(app)
+      .post('/sightings/does-not-exist/photos')
+      .attach('photo', Buffer.from([0xff, 0xd8, 0xff, 0xd9]), {
+        filename: 'stray.jpg',
+        contentType: 'image/jpeg',
+      });
+
+    expect(res.status).toBe(404);
+
+    const after = await fs.readdir(uploadsDir);
+    expect(after.length).toBe(before.length);
   });
 
   it('deleting the sighting also deletes the uploaded photo file', async () => {
