@@ -5,6 +5,7 @@ export const createSightingSchema = z.object({
   lat: z.number().min(-90).max(90),
   lng: z.number().min(-180).max(180),
   notes: z.string().optional(),
+  attributes: z.array(z.string().min(1)).default([]),
 });
 
 export type CreateSightingInput = z.infer<typeof createSightingSchema>;

@@ -50,16 +50,17 @@ model Photo {
 }
 
 model Sighting {
-  id        String          @id @default(uuid())
-  species   String          // "cat" | "dog", validated in Zod
-  lat       Float
-  lng       Float
-  notes     String?
-  fed       Boolean         @default(false)
-  fedAt     DateTime?
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
-  photos    SightingPhoto[]
+  id         String              @id @default(uuid())
+  species    String              // "cat" | "dog", validated in Zod
+  lat        Float
+  lng        Float
+  notes      String?
+  fed        Boolean             @default(false)
+  fedAt      DateTime?
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+  photos     SightingPhoto[]
+  attributes SightingAttribute[]
 }
 
 model SightingPhoto {
@@ -68,4 +69,11 @@ model SightingPhoto {
   sightingId String
   sighting   Sighting @relation(fields: [sightingId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
+}
+
+model SightingAttribute {
+  id         String   @id @default(uuid())
+  name       String
+  sightingId String
+  sighting   Sighting @relation(fields: [sightingId], references: [id], onDelete: Cascade)
 }

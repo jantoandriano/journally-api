@@ -20,6 +20,7 @@ function shapeSighting(sighting: {
   createdAt: Date;
   updatedAt: Date;
   photos: { filePath: string }[];
+  attributes: { name: string }[];
 }) {
   return {
     id: sighting.id,
@@ -32,6 +33,7 @@ function shapeSighting(sighting: {
     createdAt: sighting.createdAt,
     updatedAt: sighting.updatedAt,
     photoUrls: sighting.photos.map((photo) => `/uploads/${photo.filePath}`),
+    attributes: sighting.attributes.map((attribute) => attribute.name),
   };
 }
 
@@ -42,8 +44,11 @@ export async function createSighting(input: CreateSightingInput) {
       lat: input.lat,
       lng: input.lng,
       ...(input.notes !== undefined ? { notes: input.notes } : {}),
+      attributes: {
+        create: input.attributes.map((name) => ({ name })),
+      },
     },
-    include: { photos: true },
+    include: { photos: true, attributes: true },
   });
 
   return shapeSighting(sighting);
@@ -51,7 +56,7 @@ export async function createSighting(input: CreateSightingInput) {
 
 export async function listSightings() {
   const sightings = await prisma.sighting.findMany({
-    include: { photos: true },
+    include: { photos: true, attributes: true },
     orderBy: { createdAt: 'desc' },
   });
   return sightings.map(shapeSighting);
@@ -60,7 +65,7 @@ export async function listSightings() {
 export async function getSightingById(id: string) {
   const sighting = await prisma.sighting.findUnique({
     where: { id },
-    include: { photos: true },
+    include: { photos: true, attributes: true },
   });
   return sighting ? shapeSighting(sighting) : null;
 }
@@ -79,8 +84,16 @@ export async function updateSighting(id: string, input: UpdateSightingInput) {
       ...(input.fed !== undefined
         ? { fed: input.fed, fedAt: input.fed ? new Date() : null }
         : {}),
+      ...(input.attributes !== undefined
+        ? {
+            attributes: {
+              deleteMany: {},
+              create: input.attributes.map((name) => ({ name })),
+            },
+          }
+        : {}),
     },
-    include: { photos: true },
+    include: { photos: true, attributes: true },
   });
 
   return shapeSighting(sighting);
@@ -118,7 +131,7 @@ export async function listNearbySightings(query: NearbySightingQuery) {
       lng: { gte: lng - lngDelta, lte: lng + lngDelta },
       ...(species !== undefined ? { species } : {}),
     },
-    include: { photos: true },
+    include: { photos: true, attributes: true },
   });
 
   return sightings
