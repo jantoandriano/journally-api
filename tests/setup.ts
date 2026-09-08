@@ -9,6 +9,7 @@ beforeEach(async () => {
   await prisma.orderItem.deleteMany();
   await prisma.entryAttribute.deleteMany();
   await prisma.sightingPhoto.deleteMany();
+  await prisma.feedingLogEntry.deleteMany();
   await prisma.sighting.deleteMany();
   await prisma.journalEntry.deleteMany();
 });

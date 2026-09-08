@@ -8,13 +8,13 @@ datasource db {
 }
 
 model JournalEntry {
-  id           String      @id @default(uuid())
+  id           String           @id @default(uuid())
   placeName    String
   neighborhood String
   city         String
-  visitedAt    DateTime    @default(now())
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  visitedAt    DateTime         @default(now())
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
   lat          Float?
   lng          Float?
   placeId      String?
@@ -50,17 +50,18 @@ model Photo {
 }
 
 model Sighting {
-  id         String              @id @default(uuid())
-  species    String              // "cat" | "dog", validated in Zod
-  lat        Float
-  lng        Float
-  notes      String?
-  fed        Boolean             @default(false)
-  fedAt      DateTime?
-  createdAt  DateTime            @default(now())
-  updatedAt  DateTime            @updatedAt
-  photos     SightingPhoto[]
-  attributes SightingAttribute[]
+  id                String              @id @default(uuid())
+  species           String // "cat" | "dog", validated in Zod
+  lat               Float
+  lng               Float
+  notes             String?
+  fed               Boolean             @default(false)
+  fedAt             DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  photos            SightingPhoto[]
+  attributes        SightingAttribute[]
+  feedingLogEntries FeedingLogEntry[]
 }
 
 model SightingPhoto {
@@ -76,4 +77,12 @@ model SightingAttribute {
   name       String
   sightingId String
   sighting   Sighting @relation(fields: [sightingId], references: [id], onDelete: Cascade)
+}
+
+model FeedingLogEntry {
+  id         String   @id @default(uuid())
+  note       String?
+  sightingId String
+  sighting   Sighting @relation(fields: [sightingId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
 }
