@@ -20,7 +20,7 @@ app.use('/auth', authRouter);
 app.use('/entries/:entryId/photos', requireAuth, photosRouter);
 app.use('/entries', requireAuth, entriesRouter);
 app.use('/sightings/:sightingId/photos', requireAuth, sightingPhotosRouter);
-app.use('/sightings/:sightingId/feedings', feedingsRouter);
+app.use('/sightings/:sightingId/feedings', requireAuth, feedingsRouter);
 app.use('/sightings', requireAuth, sightingsRouter);
 app.use('/uploads', express.static(uploadsDir));
 

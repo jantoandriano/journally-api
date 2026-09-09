@@ -27,10 +27,11 @@ async function purgeStaleEntries(sightingId: string) {
 }
 
 export async function createFeedingLogEntry(
+  userId: string,
   sightingId: string,
   input: CreateFeedingLogEntryInput
 ) {
-  const sighting = await prisma.sighting.findUnique({ where: { id: sightingId } });
+  const sighting = await prisma.sighting.findFirst({ where: { id: sightingId, userId } });
   if (!sighting) return null;
 
   await purgeStaleEntries(sightingId);
@@ -45,8 +46,8 @@ export async function createFeedingLogEntry(
   return shapeFeedingLogEntry(entry);
 }
 
-export async function listFeedingLog(sightingId: string) {
-  const sighting = await prisma.sighting.findUnique({ where: { id: sightingId } });
+export async function listFeedingLog(userId: string, sightingId: string) {
+  const sighting = await prisma.sighting.findFirst({ where: { id: sightingId, userId } });
   if (!sighting) return null;
 
   await purgeStaleEntries(sightingId);
