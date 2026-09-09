@@ -1,10 +1,10 @@
-import request from 'supertest';
 import { describe, it, expect } from 'vitest';
 import { app } from '../src/app';
+import { authedRequest } from './helpers/testAuth';
 
 describe('POST /entries', () => {
   it('creates an entry and returns it shaped for the client', async () => {
-    const res = await request(app).post('/entries').send({
+    const res = await authedRequest(app).post('/entries').send({
       placeName: 'Blue Bottle',
       neighborhood: 'Hayes Valley',
       city: 'San Francisco',
@@ -29,7 +29,7 @@ describe('POST /entries', () => {
   });
 
   it('rejects a negative order item price', async () => {
-    const res = await request(app).post('/entries').send({
+    const res = await authedRequest(app).post('/entries').send({
       placeName: 'Blue Bottle',
       neighborhood: 'Hayes Valley',
       city: 'San Francisco',
@@ -40,7 +40,7 @@ describe('POST /entries', () => {
   });
 
   it('accepts and stores optional lat/lng/placeId', async () => {
-    const res = await request(app).post('/entries').send({
+    const res = await authedRequest(app).post('/entries').send({
       placeName: 'Blue Bottle',
       neighborhood: 'Hayes Valley',
       city: 'San Francisco',
@@ -57,7 +57,7 @@ describe('POST /entries', () => {
   });
 
   it('defaults lat/lng/placeId to null when omitted', async () => {
-    const res = await request(app).post('/entries').send({
+    const res = await authedRequest(app).post('/entries').send({
       placeName: 'Blue Bottle',
       neighborhood: 'Hayes Valley',
       city: 'San Francisco',
@@ -71,7 +71,7 @@ describe('POST /entries', () => {
   });
 
   it('rejects an out-of-range lat', async () => {
-    const res = await request(app).post('/entries').send({
+    const res = await authedRequest(app).post('/entries').send({
       placeName: 'Blue Bottle',
       neighborhood: 'Hayes Valley',
       city: 'San Francisco',
@@ -84,7 +84,7 @@ describe('POST /entries', () => {
   });
 
   it('rejects a body missing placeName', async () => {
-    const res = await request(app).post('/entries').send({
+    const res = await authedRequest(app).post('/entries').send({
       neighborhood: 'Hayes Valley',
       city: 'San Francisco',
     });

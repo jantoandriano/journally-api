@@ -1,17 +1,17 @@
-import request from 'supertest';
 import { describe, it, expect } from 'vitest';
 import { app } from '../src/app';
+import { authedRequest } from './helpers/testAuth';
 
 describe('PATCH /entries/:id', () => {
   it('updates only the fields provided', async () => {
-    const created = await request(app).post('/entries').send({
+    const created = await authedRequest(app).post('/entries').send({
       placeName: 'Blue Bottle',
       neighborhood: 'Hayes Valley',
       city: 'San Francisco',
       orderItems: [{ name: 'Latte', price: 4.5 }],
     });
 
-    const res = await request(app)
+    const res = await authedRequest(app)
       .patch(`/entries/${created.body.id}`)
       .send({ placeName: 'Blue Bottle Coffee' });
 
@@ -22,14 +22,14 @@ describe('PATCH /entries/:id', () => {
   });
 
   it('updates lat/lng/placeId', async () => {
-    const created = await request(app).post('/entries').send({
+    const created = await authedRequest(app).post('/entries').send({
       placeName: 'Blue Bottle',
       neighborhood: 'Hayes Valley',
       city: 'San Francisco',
       orderItems: [],
     });
 
-    const res = await request(app)
+    const res = await authedRequest(app)
       .patch(`/entries/${created.body.id}`)
       .send({ lat: 37.7764, lng: -122.4266, placeId: 'ChIJ-place-id' });
 
@@ -40,7 +40,7 @@ describe('PATCH /entries/:id', () => {
   });
 
   it('returns 404 for an unknown id', async () => {
-    const res = await request(app).patch('/entries/does-not-exist').send({ placeName: 'X' });
+    const res = await authedRequest(app).patch('/entries/does-not-exist').send({ placeName: 'X' });
 
     expect(res.status).toBe(404);
   });

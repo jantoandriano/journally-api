@@ -46,9 +46,10 @@ function shapeEntry(entry: {
   };
 }
 
-export async function createEntry(input: CreateEntryInput) {
+export async function createEntry(userId: string, input: CreateEntryInput) {
   const entry = await prisma.journalEntry.create({
     data: {
+      userId,
       placeName: input.placeName,
       neighborhood: input.neighborhood,
       city: input.city,
@@ -75,24 +76,25 @@ export async function createEntry(input: CreateEntryInput) {
   return shapeEntry(entry);
 }
 
-export async function listEntries() {
+export async function listEntries(userId: string) {
   const entries = await prisma.journalEntry.findMany({
+    where: { userId },
     include: { orderItems: true, photos: true, attributes: true },
     orderBy: { visitedAt: 'desc' },
   });
   return entries.map(shapeEntry);
 }
 
-export async function getEntryById(id: string) {
-  const entry = await prisma.journalEntry.findUnique({
-    where: { id },
+export async function getEntryById(userId: string, id: string) {
+  const entry = await prisma.journalEntry.findFirst({
+    where: { id, userId },
     include: { orderItems: true, photos: true, attributes: true },
   });
   return entry ? shapeEntry(entry) : null;
 }
 
-export async function updateEntry(id: string, input: UpdateEntryInput) {
-  const existing = await prisma.journalEntry.findUnique({ where: { id } });
+export async function updateEntry(userId: string, id: string, input: UpdateEntryInput) {
+  const existing = await prisma.journalEntry.findFirst({ where: { id, userId } });
   if (!existing) return null;
 
   const entry = await prisma.journalEntry.update({
@@ -134,15 +136,13 @@ export async function updateEntry(id: string, input: UpdateEntryInput) {
   return shapeEntry(entry);
 }
 
-export async function listNearbyEntries(query: NearbyEntryQuery) {
+export async function listNearbyEntries(userId: string, query: NearbyEntryQuery) {
   const { lat, lng, radiusKm } = query;
   const { latDelta, lngDelta } = boundingBoxDeltas(radiusKm, lat);
 
   const entries = await prisma.journalEntry.findMany({
     where: {
-      // `lat`/`lng` are nullable on JournalEntry — entries without them are
-      // naturally excluded here since a range comparison against NULL is
-      // never true, so no explicit not-null clause is needed.
+      userId,
       lat: { gte: lat - latDelta, lte: lat + latDelta },
       lng: { gte: lng - lngDelta, lte: lng + lngDelta },
     },
@@ -158,9 +158,9 @@ export async function listNearbyEntries(query: NearbyEntryQuery) {
     .sort((a, b) => a.distanceKm - b.distanceKm);
 }
 
-export async function deleteEntry(id: string) {
-  const existing = await prisma.journalEntry.findUnique({
-    where: { id },
+export async function deleteEntry(userId: string, id: string) {
+  const existing = await prisma.journalEntry.findFirst({
+    where: { id, userId },
     include: { photos: true },
   });
   if (!existing) return false;

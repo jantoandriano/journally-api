@@ -1,10 +1,10 @@
-import request from 'supertest';
 import { describe, it, expect } from 'vitest';
 import { app } from '../src/app';
+import { authedRequest } from './helpers/testAuth';
 
 describe('notes, rating, attributes, order item note, photoCount', () => {
   it('accepts and returns notes, rating, attributes, and order item note on create', async () => {
-    const res = await request(app)
+    const res = await authedRequest(app)
       .post('/entries')
       .send({
         placeName: 'Blue Bottle',
@@ -25,7 +25,7 @@ describe('notes, rating, attributes, order item note, photoCount', () => {
   });
 
   it('accepts an empty notes string', async () => {
-    const res = await request(app).post('/entries').send({
+    const res = await authedRequest(app).post('/entries').send({
       placeName: 'Blue Bottle',
       neighborhood: 'Hayes Valley',
       city: 'San Francisco',
@@ -38,7 +38,7 @@ describe('notes, rating, attributes, order item note, photoCount', () => {
   });
 
   it('defaults notes/rating to null and attributes to [] when omitted', async () => {
-    const res = await request(app).post('/entries').send({
+    const res = await authedRequest(app).post('/entries').send({
       placeName: 'Blue Bottle',
       neighborhood: 'Hayes Valley',
       city: 'San Francisco',
@@ -52,7 +52,7 @@ describe('notes, rating, attributes, order item note, photoCount', () => {
   });
 
   it('rejects a rating above 5', async () => {
-    const res = await request(app).post('/entries').send({
+    const res = await authedRequest(app).post('/entries').send({
       placeName: 'Blue Bottle',
       neighborhood: 'Hayes Valley',
       city: 'San Francisco',
@@ -64,14 +64,14 @@ describe('notes, rating, attributes, order item note, photoCount', () => {
   });
 
   it('updates notes, rating, and attributes via PATCH', async () => {
-    const created = await request(app).post('/entries').send({
+    const created = await authedRequest(app).post('/entries').send({
       placeName: 'Blue Bottle',
       neighborhood: 'Hayes Valley',
       city: 'San Francisco',
       orderItems: [],
     });
 
-    const res = await request(app)
+    const res = await authedRequest(app)
       .patch(`/entries/${created.body.id}`)
       .send({ notes: 'Updated', rating: 3, attributes: ['quiet'] });
 

@@ -14,8 +14,8 @@ export const entriesRouter = Router();
 
 entriesRouter.get(
   '/',
-  asyncHandler(async (_req, res) => {
-    const entries = await listEntries();
+  asyncHandler(async (req, res) => {
+    const entries = await listEntries(req.userId!);
     res.json(entries);
   })
 );
@@ -29,7 +29,7 @@ entriesRouter.get(
       return;
     }
 
-    const entries = await listNearbyEntries(parsed.data);
+    const entries = await listNearbyEntries(req.userId!, parsed.data);
     res.json(entries);
   })
 );
@@ -37,7 +37,7 @@ entriesRouter.get(
 entriesRouter.get(
   '/:id',
   asyncHandler(async (req, res) => {
-    const entry = await getEntryById(req.params.id);
+    const entry = await getEntryById(req.userId!, req.params.id);
     if (!entry) {
       res.status(404).json({ error: 'Entry not found' });
       return;
@@ -49,7 +49,7 @@ entriesRouter.get(
 entriesRouter.delete(
   '/:id',
   asyncHandler(async (req, res) => {
-    const deleted = await deleteEntry(req.params.id);
+    const deleted = await deleteEntry(req.userId!, req.params.id);
     if (!deleted) {
       res.status(404).json({ error: 'Entry not found' });
       return;
@@ -67,7 +67,7 @@ entriesRouter.post(
       return;
     }
 
-    const entry = await createEntry(parsed.data);
+    const entry = await createEntry(req.userId!, parsed.data);
     res.status(201).json(entry);
   })
 );
@@ -81,7 +81,7 @@ entriesRouter.patch(
       return;
     }
 
-    const entry = await updateEntry(req.params.id, parsed.data);
+    const entry = await updateEntry(req.userId!, req.params.id, parsed.data);
     if (!entry) {
       res.status(404).json({ error: 'Entry not found' });
       return;
