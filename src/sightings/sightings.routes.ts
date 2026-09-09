@@ -18,8 +18,8 @@ export const sightingsRouter = Router();
 
 sightingsRouter.get(
   '/',
-  asyncHandler(async (_req, res) => {
-    const sightings = await listSightings();
+  asyncHandler(async (req, res) => {
+    const sightings = await listSightings(req.userId!);
     res.json(sightings);
   })
 );
@@ -33,7 +33,7 @@ sightingsRouter.get(
       return;
     }
 
-    const sightings = await listNearbySightings(parsed.data);
+    const sightings = await listNearbySightings(req.userId!, parsed.data);
     res.json(sightings);
   })
 );
@@ -41,7 +41,7 @@ sightingsRouter.get(
 sightingsRouter.get(
   '/:id',
   asyncHandler(async (req, res) => {
-    const sighting = await getSightingById(req.params.id);
+    const sighting = await getSightingById(req.userId!, req.params.id);
     if (!sighting) {
       res.status(404).json({ error: 'Sighting not found' });
       return;
@@ -59,7 +59,7 @@ sightingsRouter.post(
       return;
     }
 
-    const sighting = await createSighting(parsed.data);
+    const sighting = await createSighting(req.userId!, parsed.data);
     res.status(201).json(sighting);
   })
 );
@@ -73,7 +73,7 @@ sightingsRouter.patch(
       return;
     }
 
-    const sighting = await updateSighting(req.params.id, parsed.data);
+    const sighting = await updateSighting(req.userId!, req.params.id, parsed.data);
     if (!sighting) {
       res.status(404).json({ error: 'Sighting not found' });
       return;
@@ -85,7 +85,7 @@ sightingsRouter.patch(
 sightingsRouter.delete(
   '/:id',
   asyncHandler(async (req, res) => {
-    const deleted = await deleteSighting(req.params.id);
+    const deleted = await deleteSighting(req.userId!, req.params.id);
     if (!deleted) {
       res.status(404).json({ error: 'Sighting not found' });
       return;

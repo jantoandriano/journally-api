@@ -1,10 +1,10 @@
-import request from 'supertest';
 import { describe, it, expect } from 'vitest';
 import { app } from '../src/app';
+import { authedRequest } from './helpers/testAuth';
 
 describe('POST /sightings', () => {
   it('creates a sighting and returns it shaped for the client', async () => {
-    const res = await request(app).post('/sightings').send({
+    const res = await authedRequest(app).post('/sightings').send({
       species: 'cat',
       lat: 37.7749,
       lng: -122.4194,
@@ -25,7 +25,7 @@ describe('POST /sightings', () => {
   });
 
   it('creates a sighting without notes', async () => {
-    const res = await request(app).post('/sightings').send({
+    const res = await authedRequest(app).post('/sightings').send({
       species: 'dog',
       lat: 40.7128,
       lng: -74.006,
@@ -36,7 +36,7 @@ describe('POST /sightings', () => {
   });
 
   it('rejects an unknown species', async () => {
-    const res = await request(app).post('/sightings').send({
+    const res = await authedRequest(app).post('/sightings').send({
       species: 'raccoon',
       lat: 0,
       lng: 0,
@@ -47,7 +47,7 @@ describe('POST /sightings', () => {
   });
 
   it('rejects a body missing lat/lng', async () => {
-    const res = await request(app).post('/sightings').send({ species: 'cat' });
+    const res = await authedRequest(app).post('/sightings').send({ species: 'cat' });
 
     expect(res.status).toBe(400);
   });

@@ -37,9 +37,10 @@ function shapeSighting(sighting: {
   };
 }
 
-export async function createSighting(input: CreateSightingInput) {
+export async function createSighting(userId: string, input: CreateSightingInput) {
   const sighting = await prisma.sighting.create({
     data: {
+      userId,
       species: input.species,
       lat: input.lat,
       lng: input.lng,
@@ -54,24 +55,25 @@ export async function createSighting(input: CreateSightingInput) {
   return shapeSighting(sighting);
 }
 
-export async function listSightings() {
+export async function listSightings(userId: string) {
   const sightings = await prisma.sighting.findMany({
+    where: { userId },
     include: { photos: true, attributes: true },
     orderBy: { createdAt: 'desc' },
   });
   return sightings.map(shapeSighting);
 }
 
-export async function getSightingById(id: string) {
-  const sighting = await prisma.sighting.findUnique({
-    where: { id },
+export async function getSightingById(userId: string, id: string) {
+  const sighting = await prisma.sighting.findFirst({
+    where: { id, userId },
     include: { photos: true, attributes: true },
   });
   return sighting ? shapeSighting(sighting) : null;
 }
 
-export async function updateSighting(id: string, input: UpdateSightingInput) {
-  const existing = await prisma.sighting.findUnique({ where: { id } });
+export async function updateSighting(userId: string, id: string, input: UpdateSightingInput) {
+  const existing = await prisma.sighting.findFirst({ where: { id, userId } });
   if (!existing) return null;
 
   const sighting = await prisma.sighting.update({
@@ -99,9 +101,9 @@ export async function updateSighting(id: string, input: UpdateSightingInput) {
   return shapeSighting(sighting);
 }
 
-export async function deleteSighting(id: string) {
-  const existing = await prisma.sighting.findUnique({
-    where: { id },
+export async function deleteSighting(userId: string, id: string) {
+  const existing = await prisma.sighting.findFirst({
+    where: { id, userId },
     include: { photos: true },
   });
   if (!existing) return false;
@@ -121,12 +123,13 @@ export async function deleteSighting(id: string) {
   return true;
 }
 
-export async function listNearbySightings(query: NearbySightingQuery) {
+export async function listNearbySightings(userId: string, query: NearbySightingQuery) {
   const { lat, lng, radiusKm, species } = query;
   const { latDelta, lngDelta } = boundingBoxDeltas(radiusKm, lat);
 
   const sightings = await prisma.sighting.findMany({
     where: {
+      userId,
       lat: { gte: lat - latDelta, lte: lat + latDelta },
       lng: { gte: lng - lngDelta, lte: lng + lngDelta },
       ...(species !== undefined ? { species } : {}),

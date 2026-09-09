@@ -21,7 +21,7 @@ app.use('/entries/:entryId/photos', photosRouter);
 app.use('/entries', requireAuth, entriesRouter);
 app.use('/sightings/:sightingId/photos', sightingPhotosRouter);
 app.use('/sightings/:sightingId/feedings', feedingsRouter);
-app.use('/sightings', sightingsRouter);
+app.use('/sightings', requireAuth, sightingsRouter);
 app.use('/uploads', express.static(uploadsDir));
 
 app.use((_req, res) => {
