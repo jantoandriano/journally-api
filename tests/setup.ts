@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import { beforeEach, afterEach } from 'vitest';
 import { prisma } from '../src/db';
 import { uploadsDir } from '../src/uploads';
+import { createTestUser } from './helpers/testAuth';
 
 beforeEach(async () => {
   await prisma.photo.deleteMany();
@@ -14,6 +15,10 @@ beforeEach(async () => {
   await prisma.journalEntry.deleteMany();
   await prisma.refreshToken.deleteMany();
   await prisma.user.deleteMany();
+});
+
+beforeEach(async () => {
+  await createTestUser();
 });
 
 afterEach(async () => {
