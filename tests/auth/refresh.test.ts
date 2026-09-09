@@ -41,15 +41,18 @@ describe('POST /auth/refresh', () => {
 
   it('detects reuse of an already-rotated token and revokes the session', async () => {
     const { refreshToken } = await signup('reuse@example.com');
-    await request(app).post('/auth/refresh').send({ refreshToken });
+    const first = await request(app).post('/auth/refresh').send({ refreshToken });
 
     // Replaying the original (now-rotated) token is theft-shaped.
     const replay = await request(app).post('/auth/refresh').send({ refreshToken });
     expect(replay.status).toBe(401);
     expect(replay.body.code).toBe('refresh_token_reused');
 
-    // The rotated-in token from the first call is also dead now.
-    const firstRefresh = await request(app).post('/auth/refresh').send({ refreshToken });
-    expect(firstRefresh.status).toBe(401);
+    // The rotated-in token from the first call is also dead now — the reuse
+    // detection revoked the whole session.
+    const secondRefresh = await request(app)
+      .post('/auth/refresh')
+      .send({ refreshToken: first.body.refreshToken });
+    expect(secondRefresh.status).toBe(401);
   });
 });

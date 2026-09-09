@@ -21,6 +21,13 @@ describe('POST /auth/logout', () => {
   });
 });
 
+describe('POST /auth/logout — unknown token', () => {
+  it('still returns 204 for an unknown refresh token', async () => {
+    const res = await request(app).post('/auth/logout').send({ refreshToken: 'not-a-real-token' });
+    expect(res.status).toBe(204);
+  });
+});
+
 describe('POST /auth/logout-all', () => {
   it('revokes every refresh token for the user', async () => {
     const { accessToken, refreshToken: firstToken } = await signup('logout-all@example.com');
