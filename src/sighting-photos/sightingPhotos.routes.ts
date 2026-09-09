@@ -24,7 +24,7 @@ sightingPhotosRouter.post(
       return;
     }
 
-    const photo = await addSightingPhoto(req.params.sightingId, req.file.filename);
+    const photo = await addSightingPhoto(req.userId!, req.params.sightingId, req.file.filename);
     if (!photo) {
       try {
         await unlink(path.join(uploadsDir, req.file.filename));
@@ -42,7 +42,7 @@ sightingPhotosRouter.post(
 sightingPhotosRouter.delete(
   '/:photoId',
   asyncHandler(async (req, res) => {
-    const deleted = await deleteSightingPhoto(req.params.sightingId, req.params.photoId);
+    const deleted = await deleteSightingPhoto(req.userId!, req.params.sightingId, req.params.photoId);
     if (!deleted) {
       res.status(404).json({ error: 'Photo not found' });
       return;

@@ -1,11 +1,11 @@
 import fs from 'node:fs/promises';
-import request from 'supertest';
 import { describe, it, expect } from 'vitest';
 import { app } from '../src/app';
 import { uploadsDir } from '../src/uploads';
+import { authedRequest, createTestUser } from './helpers/testAuth';
 
 async function createSighting() {
-  const res = await request(app).post('/sightings').send({ species: 'cat', lat: 0, lng: 0 });
+  const res = await authedRequest(app).post('/sightings').send({ species: 'cat', lat: 0, lng: 0 });
   return res.body;
 }
 
@@ -13,7 +13,7 @@ describe('POST /sightings/:sightingId/photos', () => {
   it('uploads a photo and serves it back from /uploads', async () => {
     const sighting = await createSighting();
 
-    const uploadRes = await request(app)
+    const uploadRes = await authedRequest(app)
       .post(`/sightings/${sighting.id}/photos`)
       .attach('photo', Buffer.from([0xff, 0xd8, 0xff, 0xd9]), {
         filename: 'stray.jpg',
@@ -23,14 +23,14 @@ describe('POST /sightings/:sightingId/photos', () => {
     expect(uploadRes.status).toBe(201);
     expect(uploadRes.body.url).toMatch(/^\/uploads\/.+\.jpg$/);
 
-    const fileRes = await request(app).get(uploadRes.body.url);
+    const fileRes = await authedRequest(app).get(uploadRes.body.url);
     expect(fileRes.status).toBe(200);
   });
 
   it('rejects a non-image file', async () => {
     const sighting = await createSighting();
 
-    const res = await request(app)
+    const res = await authedRequest(app)
       .post(`/sightings/${sighting.id}/photos`)
       .attach('photo', Buffer.from('not an image'), {
         filename: 'notes.txt',
@@ -41,7 +41,7 @@ describe('POST /sightings/:sightingId/photos', () => {
   });
 
   it('returns 404 for an unknown sighting', async () => {
-    const res = await request(app)
+    const res = await authedRequest(app)
       .post('/sightings/does-not-exist/photos')
       .attach('photo', Buffer.from([0xff, 0xd8, 0xff, 0xd9]), {
         filename: 'stray.jpg',
@@ -54,7 +54,7 @@ describe('POST /sightings/:sightingId/photos', () => {
   it('does not leave an orphaned file on disk when the sighting is unknown', async () => {
     const before = await fs.readdir(uploadsDir);
 
-    const res = await request(app)
+    const res = await authedRequest(app)
       .post('/sightings/does-not-exist/photos')
       .attach('photo', Buffer.from([0xff, 0xd8, 0xff, 0xd9]), {
         filename: 'stray.jpg',
@@ -69,16 +69,32 @@ describe('POST /sightings/:sightingId/photos', () => {
 
   it('deleting the sighting also deletes the uploaded photo file', async () => {
     const sighting = await createSighting();
-    const uploadRes = await request(app)
+    const uploadRes = await authedRequest(app)
       .post(`/sightings/${sighting.id}/photos`)
       .attach('photo', Buffer.from([0xff, 0xd8, 0xff, 0xd9]), {
         filename: 'stray.jpg',
         contentType: 'image/jpeg',
       });
 
-    await request(app).delete(`/sightings/${sighting.id}`);
+    await authedRequest(app).delete(`/sightings/${sighting.id}`);
 
-    const fileRes = await request(app).get(uploadRes.body.url);
+    const fileRes = await authedRequest(app).get(uploadRes.body.url);
     expect(fileRes.status).toBe(404);
+  });
+});
+
+describe('POST /sightings/:sightingId/photos — ownership', () => {
+  it("returns 404 uploading to another user's sighting", async () => {
+    const sighting = await createSighting();
+    await createTestUser();
+
+    const res = await authedRequest(app)
+      .post(`/sightings/${sighting.id}/photos`)
+      .attach('photo', Buffer.from([0xff, 0xd8, 0xff, 0xd9]), {
+        filename: 'stray.jpg',
+        contentType: 'image/jpeg',
+      });
+
+    expect(res.status).toBe(404);
   });
 });

@@ -5,8 +5,8 @@ import { uploadsDir } from '../uploads';
 
 export { upload } from '../photos/photos.service';
 
-export async function addSightingPhoto(sightingId: string, filePath: string) {
-  const sighting = await prisma.sighting.findUnique({ where: { id: sightingId } });
+export async function addSightingPhoto(userId: string, sightingId: string, filePath: string) {
+  const sighting = await prisma.sighting.findFirst({ where: { id: sightingId, userId } });
   if (!sighting) return null;
 
   const photo = await prisma.sightingPhoto.create({
@@ -16,9 +16,9 @@ export async function addSightingPhoto(sightingId: string, filePath: string) {
   return { id: photo.id, url: `/uploads/${photo.filePath}` };
 }
 
-export async function deleteSightingPhoto(sightingId: string, photoId: string) {
+export async function deleteSightingPhoto(userId: string, sightingId: string, photoId: string) {
   const photo = await prisma.sightingPhoto.findFirst({
-    where: { id: photoId, sightingId },
+    where: { id: photoId, sightingId, sighting: { userId } },
   });
   if (!photo) return false;
 
