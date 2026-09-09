@@ -17,7 +17,7 @@ app.use(express.json());
 
 app.use('/auth', authRouter);
 
-app.use('/entries/:entryId/photos', photosRouter);
+app.use('/entries/:entryId/photos', requireAuth, photosRouter);
 app.use('/entries', requireAuth, entriesRouter);
 app.use('/sightings/:sightingId/photos', sightingPhotosRouter);
 app.use('/sightings/:sightingId/feedings', feedingsRouter);

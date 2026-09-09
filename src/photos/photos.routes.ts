@@ -21,7 +21,7 @@ photosRouter.post(
       return;
     }
 
-    const photo = await addPhoto(req.params.entryId, req.file.filename);
+    const photo = await addPhoto(req.userId!, req.params.entryId, req.file.filename);
     if (!photo) {
       res.status(404).json({ error: 'Entry not found' });
       return;
@@ -34,7 +34,7 @@ photosRouter.post(
 photosRouter.delete(
   '/:photoId',
   asyncHandler(async (req, res) => {
-    const deleted = await deletePhoto(req.params.entryId, req.params.photoId);
+    const deleted = await deletePhoto(req.userId!, req.params.entryId, req.params.photoId);
     if (!deleted) {
       res.status(404).json({ error: 'Photo not found' });
       return;

@@ -30,8 +30,8 @@ export const upload = multer({
   },
 });
 
-export async function addPhoto(entryId: string, filePath: string) {
-  const entry = await prisma.journalEntry.findUnique({ where: { id: entryId } });
+export async function addPhoto(userId: string, entryId: string, filePath: string) {
+  const entry = await prisma.journalEntry.findFirst({ where: { id: entryId, userId } });
   if (!entry) return null;
 
   const photo = await prisma.photo.create({
@@ -41,8 +41,10 @@ export async function addPhoto(entryId: string, filePath: string) {
   return { id: photo.id, url: `/uploads/${photo.filePath}` };
 }
 
-export async function deletePhoto(entryId: string, photoId: string) {
-  const photo = await prisma.photo.findFirst({ where: { id: photoId, entryId } });
+export async function deletePhoto(userId: string, entryId: string, photoId: string) {
+  const photo = await prisma.photo.findFirst({
+    where: { id: photoId, entryId, entry: { userId } },
+  });
   if (!photo) return false;
 
   await prisma.photo.delete({ where: { id: photo.id } });

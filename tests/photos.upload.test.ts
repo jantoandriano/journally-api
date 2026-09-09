@@ -1,9 +1,9 @@
-import request from 'supertest';
 import { describe, it, expect } from 'vitest';
 import { app } from '../src/app';
+import { authedRequest, createTestUser } from './helpers/testAuth';
 
 async function createEntry() {
-  const res = await request(app).post('/entries').send({
+  const res = await authedRequest(app).post('/entries').send({
     placeName: 'Blue Bottle',
     neighborhood: 'Hayes Valley',
     city: 'San Francisco',
@@ -16,7 +16,7 @@ describe('POST /entries/:entryId/photos', () => {
   it('uploads a photo and serves it back from /uploads', async () => {
     const entry = await createEntry();
 
-    const uploadRes = await request(app)
+    const uploadRes = await authedRequest(app)
       .post(`/entries/${entry.id}/photos`)
       .attach('photo', Buffer.from([0xff, 0xd8, 0xff, 0xd9]), {
         filename: 'cafe.jpg',
@@ -26,14 +26,14 @@ describe('POST /entries/:entryId/photos', () => {
     expect(uploadRes.status).toBe(201);
     expect(uploadRes.body.url).toMatch(/^\/uploads\/.+\.jpg$/);
 
-    const fileRes = await request(app).get(uploadRes.body.url);
+    const fileRes = await authedRequest(app).get(uploadRes.body.url);
     expect(fileRes.status).toBe(200);
   });
 
   it('rejects a non-image file', async () => {
     const entry = await createEntry();
 
-    const res = await request(app)
+    const res = await authedRequest(app)
       .post(`/entries/${entry.id}/photos`)
       .attach('photo', Buffer.from('not an image'), {
         filename: 'notes.txt',
@@ -44,7 +44,7 @@ describe('POST /entries/:entryId/photos', () => {
   });
 
   it('returns 404 for an unknown entry', async () => {
-    const res = await request(app)
+    const res = await authedRequest(app)
       .post('/entries/does-not-exist/photos')
       .attach('photo', Buffer.from([0xff, 0xd8, 0xff, 0xd9]), {
         filename: 'cafe.jpg',
@@ -56,16 +56,32 @@ describe('POST /entries/:entryId/photos', () => {
 
   it('deleting the entry also deletes the uploaded photo file', async () => {
     const entry = await createEntry();
-    const uploadRes = await request(app)
+    const uploadRes = await authedRequest(app)
       .post(`/entries/${entry.id}/photos`)
       .attach('photo', Buffer.from([0xff, 0xd8, 0xff, 0xd9]), {
         filename: 'cafe.jpg',
         contentType: 'image/jpeg',
       });
 
-    await request(app).delete(`/entries/${entry.id}`);
+    await authedRequest(app).delete(`/entries/${entry.id}`);
 
-    const fileRes = await request(app).get(uploadRes.body.url);
+    const fileRes = await authedRequest(app).get(uploadRes.body.url);
     expect(fileRes.status).toBe(404);
+  });
+});
+
+describe('POST /entries/:entryId/photos — ownership', () => {
+  it("returns 404 uploading to another user's entry", async () => {
+    const entry = await createEntry();
+    await createTestUser();
+
+    const res = await authedRequest(app)
+      .post(`/entries/${entry.id}/photos`)
+      .attach('photo', Buffer.from([0xff, 0xd8, 0xff, 0xd9]), {
+        filename: 'cafe.jpg',
+        contentType: 'image/jpeg',
+      });
+
+    expect(res.status).toBe(404);
   });
 });
