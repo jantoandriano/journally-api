@@ -83,10 +83,25 @@ export async function refresh(rawToken: string) {
     },
   });
 
-  await prisma.refreshToken.update({
-    where: { id: existing.id },
+  // Atomically claim the old token: only succeeds if it's still unrevoked.
+  // This closes the TOCTOU race where two concurrent requests both read
+  // revokedAt === null before either had written anything.
+  const claimed = await prisma.refreshToken.updateMany({
+    where: { id: existing.id, revokedAt: null },
     data: { revokedAt: new Date(), replacedBy: created.id },
   });
+
+  if (claimed.count === 0) {
+    // Someone else claimed (rotated or revoked) the old token between our
+    // read and now — this request lost the race. Discard the new token we
+    // just minted so it doesn't linger unlinked, then treat this as reuse.
+    await prisma.refreshToken.delete({ where: { id: created.id } });
+    await prisma.refreshToken.updateMany({
+      where: { userId: existing.userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+    throw new AuthError('Refresh token reuse detected', 'refresh_token_reused');
+  }
 
   return { accessToken, refreshToken: newRefreshToken };
 }
