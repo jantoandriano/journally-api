@@ -7,8 +7,32 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id             String         @id @default(uuid())
+  email          String         @unique
+  passwordHash   String
+  createdAt      DateTime       @default(now())
+  refreshTokens  RefreshToken[]
+  journalEntries JournalEntry[]
+  sightings      Sighting[]
+}
+
+model RefreshToken {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash   String    @unique
+  deviceInfo  String?
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  replacedBy  String?
+  createdAt   DateTime  @default(now())
+}
+
 model JournalEntry {
   id           String           @id @default(uuid())
+  userId       String
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   placeName    String
   neighborhood String
   city         String
@@ -51,6 +75,8 @@ model Photo {
 
 model Sighting {
   id                String              @id @default(uuid())
+  userId            String
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   species           String // "cat" | "dog", validated in Zod
   lat               Float
   lng               Float

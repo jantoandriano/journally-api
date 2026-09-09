@@ -12,6 +12,8 @@ beforeEach(async () => {
   await prisma.feedingLogEntry.deleteMany();
   await prisma.sighting.deleteMany();
   await prisma.journalEntry.deleteMany();
+  await prisma.refreshToken.deleteMany();
+  await prisma.user.deleteMany();
 });
 
 afterEach(async () => {
