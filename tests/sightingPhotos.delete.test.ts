@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { app } from '../src/app';
-import { authedRequest } from './helpers/testAuth';
+import { authedRequest, createTestUser } from './helpers/testAuth';
 
 async function createSightingWithPhoto() {
   const sightingRes = await authedRequest(app).post('/sightings').send({ species: 'dog', lat: 0, lng: 0 });
@@ -28,6 +28,17 @@ describe('DELETE /sightings/:sightingId/photos/:photoId', () => {
     const { sighting } = await createSightingWithPhoto();
 
     const res = await authedRequest(app).delete(`/sightings/${sighting.id}/photos/does-not-exist`);
+    expect(res.status).toBe(404);
+  });
+});
+
+describe('DELETE /sightings/:sightingId/photos/:photoId — ownership', () => {
+  it("returns 404 for another user's photo", async () => {
+    const { sighting, photo } = await createSightingWithPhoto();
+
+    await createTestUser(); // switches the module-level "current" token to a second user
+    const res = await authedRequest(app).delete(`/sightings/${sighting.id}/photos/${photo.id}`);
+
     expect(res.status).toBe(404);
   });
 });

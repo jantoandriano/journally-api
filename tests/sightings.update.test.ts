@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { app } from '../src/app';
-import { authedRequest } from './helpers/testAuth';
+import { authedRequest, createTestUser } from './helpers/testAuth';
 
 describe('PATCH /sightings/:id', () => {
   it('updates only the fields provided', async () => {
@@ -53,6 +53,23 @@ describe('PATCH /sightings/:id', () => {
 
   it('returns 404 for an unknown id', async () => {
     const res = await authedRequest(app).patch('/sightings/does-not-exist').send({ notes: 'x' });
+
+    expect(res.status).toBe(404);
+  });
+});
+
+describe('PATCH /sightings/:id — ownership', () => {
+  it("returns 404 for another user's sighting", async () => {
+    const created = await authedRequest(app).post('/sightings').send({
+      species: 'cat',
+      lat: 0,
+      lng: 0,
+    });
+
+    await createTestUser(); // switches the module-level "current" token to a second user
+    const res = await authedRequest(app)
+      .patch(`/sightings/${created.body.id}`)
+      .send({ notes: 'hijacked' });
 
     expect(res.status).toBe(404);
   });

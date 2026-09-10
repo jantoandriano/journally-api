@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { app } from '../src/app';
-import { authedRequest } from './helpers/testAuth';
+import { authedRequest, createTestUser } from './helpers/testAuth';
 
 async function createSighting() {
   const res = await authedRequest(app).post('/sightings').send({ species: 'cat', lat: 0, lng: 0 });
@@ -35,6 +35,19 @@ describe('POST /sightings/:sightingId/feedings', () => {
 
   it('returns 404 for an unknown sighting', async () => {
     const res = await authedRequest(app).post('/sightings/does-not-exist/feedings').send({});
+
+    expect(res.status).toBe(404);
+  });
+});
+
+describe('POST /sightings/:sightingId/feedings — ownership', () => {
+  it("returns 404 for another user's sighting", async () => {
+    const sighting = await createSighting();
+
+    await createTestUser(); // switches the module-level "current" token to a second user
+    const res = await authedRequest(app)
+      .post(`/sightings/${sighting.id}/feedings`)
+      .send({ note: 'Hijacked feeding' });
 
     expect(res.status).toBe(404);
   });

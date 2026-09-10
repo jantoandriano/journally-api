@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { app } from '../src/app';
-import { authedRequest } from './helpers/testAuth';
+import { authedRequest, createTestUser } from './helpers/testAuth';
 
 describe('PATCH /entries/:id', () => {
   it('updates only the fields provided', async () => {
@@ -41,6 +41,24 @@ describe('PATCH /entries/:id', () => {
 
   it('returns 404 for an unknown id', async () => {
     const res = await authedRequest(app).patch('/entries/does-not-exist').send({ placeName: 'X' });
+
+    expect(res.status).toBe(404);
+  });
+});
+
+describe('PATCH /entries/:id — ownership', () => {
+  it("returns 404 for another user's entry", async () => {
+    const created = await authedRequest(app).post('/entries').send({
+      placeName: 'Owner Only Cafe',
+      neighborhood: 'Hayes Valley',
+      city: 'San Francisco',
+      orderItems: [],
+    });
+
+    await createTestUser(); // switches the module-level "current" token to a second user
+    const res = await authedRequest(app)
+      .patch(`/entries/${created.body.id}`)
+      .send({ placeName: 'Hijacked Name' });
 
     expect(res.status).toBe(404);
   });

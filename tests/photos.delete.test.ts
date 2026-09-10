@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { app } from '../src/app';
-import { authedRequest } from './helpers/testAuth';
+import { authedRequest, createTestUser } from './helpers/testAuth';
 
 async function createEntryWithPhoto() {
   const entryRes = await authedRequest(app).post('/entries').send({
@@ -33,6 +33,17 @@ describe('DELETE /entries/:entryId/photos/:photoId', () => {
     const { entry } = await createEntryWithPhoto();
 
     const res = await authedRequest(app).delete(`/entries/${entry.id}/photos/does-not-exist`);
+    expect(res.status).toBe(404);
+  });
+});
+
+describe('DELETE /entries/:entryId/photos/:photoId — ownership', () => {
+  it("returns 404 for another user's photo", async () => {
+    const { entry, photo } = await createEntryWithPhoto();
+
+    await createTestUser(); // switches the module-level "current" token to a second user
+    const res = await authedRequest(app).delete(`/entries/${entry.id}/photos/${photo.id}`);
+
     expect(res.status).toBe(404);
   });
 });
