@@ -28,11 +28,12 @@ async function issueTokenPair(userId: string, deviceInfo: string | undefined) {
 }
 
 export async function signup(input: SignupInput) {
-  const existing = await prisma.user.findUnique({ where: { email: input.email } });
+  const email = input.email.trim().toLowerCase();
+  const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) throw new AuthError('Email already in use', 'email_taken');
 
   const user = await prisma.user.create({
-    data: { email: input.email, passwordHash: await hashPassword(input.password) },
+    data: { email, passwordHash: await hashPassword(input.password) },
   });
 
   const tokens = await issueTokenPair(user.id, input.deviceInfo);
@@ -40,7 +41,8 @@ export async function signup(input: SignupInput) {
 }
 
 export async function login(input: LoginInput) {
-  const user = await prisma.user.findUnique({ where: { email: input.email } });
+  const email = input.email.trim().toLowerCase();
+  const user = await prisma.user.findUnique({ where: { email } });
   if (!user || !(await verifyPassword(user.passwordHash, input.password))) {
     throw new AuthError('Invalid email or password', 'invalid_credentials');
   }

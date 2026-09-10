@@ -1,3 +1,10 @@
+# NOTE: this stack runs `prisma migrate deploy` on container start (see
+# Dockerfile CMD). The auth migration (20260909054550_add_auth) adds
+# required, no-default userId columns and will fail — crash-looping the api
+# container forever — against any database that already has rows in
+# JournalEntry or Sighting. Only deploy this branch against a fresh/empty
+# database volume. If you have existing data, wipe the `api-data` volume
+# (or manually backfill userId) before running `docker compose up`.
 services:
   api:
     build: .
@@ -6,6 +13,9 @@ services:
       DATABASE_URL: file:/data/prod.db
       UPLOADS_DIR: /data/uploads
       PORT: 3000
+      # Sourced from a .env file next to this docker-compose.yml (see
+      # .env.example) — docker compose auto-loads it for ${...} interpolation.
+      JWT_SECRET: ${JWT_SECRET}
     volumes:
       - api-data:/data
     expose:

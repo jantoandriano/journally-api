@@ -14,6 +14,20 @@
   - install Docker on VM
   - git clone repo
   - fill Caddyfile with `<IP>.sslip.io`
+  - create a `.env` file next to `docker-compose.yml` on the VM (copy
+    `.env.example` and set a real `JWT_SECRET` — docker compose reads this
+    file automatically and interpolates `${JWT_SECRET}` into the api
+    container; it is gitignored, so it will NOT exist after `git clone`
+    and must be created by hand on every fresh VM)
+  - **IMPORTANT — fresh database only:** the auth migration
+    (`20260909054550_add_auth`) requires an empty database. It runs
+    automatically via `prisma migrate deploy` on container start (see
+    Dockerfile) and will crash-loop the api container forever if the
+    `api-data` volume already has any JournalEntry/Sighting rows in it from
+    a pre-auth deploy. On a brand-new VM this is a non-issue; if you are
+    redeploying onto a VM that already ran the app before this branch,
+    wipe the `api-data` volume (`docker compose down -v`) or manually
+    backfill `userId` before bringing the stack up.
   - `docker compose up -d --build`
   - confirm HTTPS reachable
 - [ ] Point Flutter app base URL at `https://<IP>.sslip.io`
