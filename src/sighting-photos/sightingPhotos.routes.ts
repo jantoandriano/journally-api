@@ -2,6 +2,7 @@ import { unlink } from 'node:fs/promises';
 import path from 'node:path';
 import { Router } from 'express';
 import { asyncHandler } from '../middleware/asyncHandler';
+import { requireUserId } from '../middleware/requireAuth';
 import { uploadsDir } from '../uploads';
 import { addSightingPhoto, deleteSightingPhoto, upload } from './sightingPhotos.service';
 
@@ -24,7 +25,7 @@ sightingPhotosRouter.post(
       return;
     }
 
-    const photo = await addSightingPhoto(req.userId!, req.params.sightingId, req.file.filename);
+    const photo = await addSightingPhoto(requireUserId(req), req.params.sightingId, req.file.filename);
     if (!photo) {
       try {
         await unlink(path.join(uploadsDir, req.file.filename));
@@ -42,7 +43,11 @@ sightingPhotosRouter.post(
 sightingPhotosRouter.delete(
   '/:photoId',
   asyncHandler(async (req, res) => {
-    const deleted = await deleteSightingPhoto(req.userId!, req.params.sightingId, req.params.photoId);
+    const deleted = await deleteSightingPhoto(
+      requireUserId(req),
+      req.params.sightingId,
+      req.params.photoId
+    );
     if (!deleted) {
       res.status(404).json({ error: 'Photo not found' });
       return;

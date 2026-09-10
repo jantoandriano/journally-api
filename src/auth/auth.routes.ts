@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { asyncHandler } from '../middleware/asyncHandler';
-import { requireAuth } from '../middleware/requireAuth';
+import { requireAuth, requireUserId } from '../middleware/requireAuth';
 import { loginSchema, logoutSchema, refreshSchema, signupSchema } from './auth.schema';
 import { AuthError, login, logout, logoutAll, refresh, signup } from './auth.service';
 
@@ -86,7 +86,7 @@ authRouter.post(
   '/logout-all',
   requireAuth,
   asyncHandler(async (req, res) => {
-    await logoutAll(req.userId!);
+    await logoutAll(requireUserId(req));
     res.status(204).send();
   })
 );

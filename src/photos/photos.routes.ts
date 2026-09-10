@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { asyncHandler } from '../middleware/asyncHandler';
+import { requireUserId } from '../middleware/requireAuth';
 import { addPhoto, deletePhoto, upload } from './photos.service';
 
 export const photosRouter = Router({ mergeParams: true });
@@ -21,7 +22,7 @@ photosRouter.post(
       return;
     }
 
-    const photo = await addPhoto(req.userId!, req.params.entryId, req.file.filename);
+    const photo = await addPhoto(requireUserId(req), req.params.entryId, req.file.filename);
     if (!photo) {
       res.status(404).json({ error: 'Entry not found' });
       return;
@@ -34,7 +35,7 @@ photosRouter.post(
 photosRouter.delete(
   '/:photoId',
   asyncHandler(async (req, res) => {
-    const deleted = await deletePhoto(req.userId!, req.params.entryId, req.params.photoId);
+    const deleted = await deletePhoto(requireUserId(req), req.params.entryId, req.params.photoId);
     if (!deleted) {
       res.status(404).json({ error: 'Photo not found' });
       return;

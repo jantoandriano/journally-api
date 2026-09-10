@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { asyncHandler } from '../middleware/asyncHandler';
+import { requireUserId } from '../middleware/requireAuth';
 import {
   createSightingSchema,
   nearbySightingQuerySchema,
@@ -19,7 +20,7 @@ export const sightingsRouter = Router();
 sightingsRouter.get(
   '/',
   asyncHandler(async (req, res) => {
-    const sightings = await listSightings(req.userId!);
+    const sightings = await listSightings(requireUserId(req));
     res.json(sightings);
   })
 );
@@ -33,7 +34,7 @@ sightingsRouter.get(
       return;
     }
 
-    const sightings = await listNearbySightings(req.userId!, parsed.data);
+    const sightings = await listNearbySightings(requireUserId(req), parsed.data);
     res.json(sightings);
   })
 );
@@ -41,7 +42,7 @@ sightingsRouter.get(
 sightingsRouter.get(
   '/:id',
   asyncHandler(async (req, res) => {
-    const sighting = await getSightingById(req.userId!, req.params.id);
+    const sighting = await getSightingById(requireUserId(req), req.params.id);
     if (!sighting) {
       res.status(404).json({ error: 'Sighting not found' });
       return;
@@ -59,7 +60,7 @@ sightingsRouter.post(
       return;
     }
 
-    const sighting = await createSighting(req.userId!, parsed.data);
+    const sighting = await createSighting(requireUserId(req), parsed.data);
     res.status(201).json(sighting);
   })
 );
@@ -73,7 +74,7 @@ sightingsRouter.patch(
       return;
     }
 
-    const sighting = await updateSighting(req.userId!, req.params.id, parsed.data);
+    const sighting = await updateSighting(requireUserId(req), req.params.id, parsed.data);
     if (!sighting) {
       res.status(404).json({ error: 'Sighting not found' });
       return;
@@ -85,7 +86,7 @@ sightingsRouter.patch(
 sightingsRouter.delete(
   '/:id',
   asyncHandler(async (req, res) => {
-    const deleted = await deleteSighting(req.userId!, req.params.id);
+    const deleted = await deleteSighting(requireUserId(req), req.params.id);
     if (!deleted) {
       res.status(404).json({ error: 'Sighting not found' });
       return;

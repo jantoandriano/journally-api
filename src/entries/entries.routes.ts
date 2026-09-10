@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { asyncHandler } from '../middleware/asyncHandler';
+import { requireUserId } from '../middleware/requireAuth';
 import { createEntrySchema, nearbyEntryQuerySchema, updateEntrySchema } from './entries.schema';
 import {
   createEntry,
@@ -15,7 +16,7 @@ export const entriesRouter = Router();
 entriesRouter.get(
   '/',
   asyncHandler(async (req, res) => {
-    const entries = await listEntries(req.userId!);
+    const entries = await listEntries(requireUserId(req));
     res.json(entries);
   })
 );
@@ -29,7 +30,7 @@ entriesRouter.get(
       return;
     }
 
-    const entries = await listNearbyEntries(req.userId!, parsed.data);
+    const entries = await listNearbyEntries(requireUserId(req), parsed.data);
     res.json(entries);
   })
 );
@@ -37,7 +38,7 @@ entriesRouter.get(
 entriesRouter.get(
   '/:id',
   asyncHandler(async (req, res) => {
-    const entry = await getEntryById(req.userId!, req.params.id);
+    const entry = await getEntryById(requireUserId(req), req.params.id);
     if (!entry) {
       res.status(404).json({ error: 'Entry not found' });
       return;
@@ -49,7 +50,7 @@ entriesRouter.get(
 entriesRouter.delete(
   '/:id',
   asyncHandler(async (req, res) => {
-    const deleted = await deleteEntry(req.userId!, req.params.id);
+    const deleted = await deleteEntry(requireUserId(req), req.params.id);
     if (!deleted) {
       res.status(404).json({ error: 'Entry not found' });
       return;
@@ -67,7 +68,7 @@ entriesRouter.post(
       return;
     }
 
-    const entry = await createEntry(req.userId!, parsed.data);
+    const entry = await createEntry(requireUserId(req), parsed.data);
     res.status(201).json(entry);
   })
 );
@@ -81,7 +82,7 @@ entriesRouter.patch(
       return;
     }
 
-    const entry = await updateEntry(req.userId!, req.params.id, parsed.data);
+    const entry = await updateEntry(requireUserId(req), req.params.id, parsed.data);
     if (!entry) {
       res.status(404).json({ error: 'Entry not found' });
       return;

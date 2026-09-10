@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { asyncHandler } from '../middleware/asyncHandler';
+import { requireUserId } from '../middleware/requireAuth';
 import { createFeedingLogEntrySchema } from './feedings.schema';
 import { createFeedingLogEntry, listFeedingLog } from './feedings.service';
 
@@ -8,7 +9,7 @@ export const feedingsRouter = Router({ mergeParams: true });
 feedingsRouter.get(
   '/',
   asyncHandler(async (req, res) => {
-    const entries = await listFeedingLog(req.userId!, req.params.sightingId);
+    const entries = await listFeedingLog(requireUserId(req), req.params.sightingId);
     if (!entries) {
       res.status(404).json({ error: 'Sighting not found' });
       return;
@@ -26,7 +27,7 @@ feedingsRouter.post(
       return;
     }
 
-    const entry = await createFeedingLogEntry(req.userId!, req.params.sightingId, parsed.data);
+    const entry = await createFeedingLogEntry(requireUserId(req), req.params.sightingId, parsed.data);
     if (!entry) {
       res.status(404).json({ error: 'Sighting not found' });
       return;
