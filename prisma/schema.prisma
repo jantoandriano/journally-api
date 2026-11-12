@@ -8,25 +8,27 @@ datasource db {
 }
 
 model User {
-  id             String         @id @default(uuid())
-  email          String         @unique
-  passwordHash   String
-  createdAt      DateTime       @default(now())
-  refreshTokens  RefreshToken[]
-  journalEntries JournalEntry[]
-  sightings      Sighting[]
+  id                String            @id @default(uuid())
+  email             String            @unique
+  passwordHash      String
+  createdAt         DateTime          @default(now())
+  refreshTokens     RefreshToken[]
+  journalEntries    JournalEntry[]
+  sightings         Sighting[]
+  feedingLogEntries FeedingLogEntry[]
+  sightingReports   SightingReport[]
 }
 
 model RefreshToken {
-  id          String    @id @default(uuid())
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tokenHash   String    @unique
-  deviceInfo  String?
-  expiresAt   DateTime
-  revokedAt   DateTime?
-  replacedBy  String?
-  createdAt   DateTime  @default(now())
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String    @unique
+  deviceInfo String?
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  replacedBy String?
+  createdAt  DateTime  @default(now())
 }
 
 model JournalEntry {
@@ -88,6 +90,11 @@ model Sighting {
   photos            SightingPhoto[]
   attributes        SightingAttribute[]
   feedingLogEntries FeedingLogEntry[]
+  placeName         String?
+  hiddenAt          DateTime?
+  reports           SightingReport[]
+
+  @@index([lat, lng])
 }
 
 model SightingPhoto {
@@ -110,5 +117,21 @@ model FeedingLogEntry {
   note       String?
   sightingId String
   sighting   Sighting @relation(fields: [sightingId], references: [id], onDelete: Cascade)
+  // Who added the entry — for abuse tracing only, never returned by the API.
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   createdAt  DateTime @default(now())
+}
+
+model SightingReport {
+  id         String   @id @default(uuid())
+  sightingId String
+  sighting   Sighting @relation(fields: [sightingId], references: [id], onDelete: Cascade)
+  reporterId String
+  reporter   User     @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  reason     String // validated in Zod
+  note       String?
+  createdAt  DateTime @default(now())
+
+  @@unique([sightingId, reporterId])
 }

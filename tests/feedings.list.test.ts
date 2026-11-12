@@ -48,13 +48,17 @@ describe('GET /sightings/:sightingId/feedings', () => {
   });
 });
 
-describe('GET /sightings/:sightingId/feedings — ownership', () => {
-  it("returns 404 for another user's sighting", async () => {
+describe('GET /sightings/:sightingId/feedings — shared', () => {
+  it("lets another user read a sighting's feeding log", async () => {
     const sighting = await createSighting();
+    await authedRequest(app).post(`/sightings/${sighting.id}/feedings`).send({ note: 'Morning' });
     await createTestUser();
 
     const res = await authedRequest(app).get(`/sightings/${sighting.id}/feedings`);
 
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0].note).toBe('Morning');
+    expect(res.body[0]).not.toHaveProperty('userId');
   });
 });

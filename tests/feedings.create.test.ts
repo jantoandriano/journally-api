@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { app } from '../src/app';
+import { prisma } from '../src/db';
 import { authedRequest, createTestUser } from './helpers/testAuth';
 
 async function createSighting() {
@@ -40,15 +41,23 @@ describe('POST /sightings/:sightingId/feedings', () => {
   });
 });
 
-describe('POST /sightings/:sightingId/feedings — ownership', () => {
-  it("returns 404 for another user's sighting", async () => {
+describe('POST /sightings/:sightingId/feedings — shared', () => {
+  it('lets another user add a feed, and marks the sighting fed for everyone', async () => {
     const sighting = await createSighting();
 
-    await createTestUser(); // switches the module-level "current" token to a second user
+    const { user: feeder } = await createTestUser(); // second user is now "current"
     const res = await authedRequest(app)
       .post(`/sightings/${sighting.id}/feedings`)
-      .send({ note: 'Hijacked feeding' });
+      .send({ note: 'Kibble' });
 
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(201);
+    expect(res.body).not.toHaveProperty('userId');
+
+    // Recorded for abuse tracing, never returned.
+    const row = await prisma.feedingLogEntry.findUnique({ where: { id: res.body.id } });
+    expect(row?.userId).toBe(feeder.id);
+
+    const seen = await authedRequest(app).get(`/sightings/${sighting.id}`);
+    expect(seen.body.fed).toBe(true);
   });
 });

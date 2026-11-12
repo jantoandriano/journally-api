@@ -1,8 +1,11 @@
 import { Router } from 'express';
 import { asyncHandler } from '../middleware/asyncHandler';
 import { requireUserId } from '../middleware/requireAuth';
+import { reportSightingSchema } from '../reports/reports.schema';
+import { reportSighting } from '../reports/reports.service';
 import {
   createSightingSchema,
+  mapSightingQuerySchema,
   nearbySightingQuerySchema,
   updateSightingSchema,
 } from './sightings.schema';
@@ -12,6 +15,7 @@ import {
   getSightingById,
   listNearbySightings,
   listSightings,
+  listSightingsInBounds,
   updateSighting,
 } from './sightings.service';
 
@@ -39,6 +43,21 @@ sightingsRouter.get(
   })
 );
 
+// Registered ahead of '/:id', like '/nearby', so "map" isn't read as an id.
+sightingsRouter.get(
+  '/map',
+  asyncHandler(async (req, res) => {
+    const parsed = mapSightingQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Invalid query', details: parsed.error.issues });
+      return;
+    }
+
+    const sightings = await listSightingsInBounds(requireUserId(req), parsed.data);
+    res.json(sightings);
+  })
+);
+
 sightingsRouter.get(
   '/:id',
   asyncHandler(async (req, res) => {
@@ -62,6 +81,33 @@ sightingsRouter.post(
 
     const sighting = await createSighting(requireUserId(req), parsed.data);
     res.status(201).json(sighting);
+  })
+);
+
+sightingsRouter.post(
+  '/:id/report',
+  asyncHandler(async (req, res) => {
+    const parsed = reportSightingSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Invalid report', details: parsed.error.issues });
+      return;
+    }
+
+    const result = await reportSighting(requireUserId(req), req.params.id, parsed.data);
+    switch (result) {
+      case 'not_found':
+        res.status(404).json({ error: 'Sighting not found' });
+        return;
+      case 'own_sighting':
+        res.status(400).json({ error: 'Cannot report your own sighting' });
+        return;
+      case 'already_reported':
+        res.status(200).json({ reported: true });
+        return;
+      case 'created':
+        res.status(201).json({ reported: true });
+        return;
+    }
   })
 );
 

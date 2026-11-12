@@ -20,31 +20,14 @@ describe('PATCH /sightings/:id', () => {
     expect(res.body.species).toBe('cat');
   });
 
-  it('sets fedAt when fed is toggled to true', async () => {
+  it('ignores fed on PATCH; fed comes from the feeding log', async () => {
     const created = await authedRequest(app).post('/sightings').send({
       species: 'dog',
       lat: 0,
       lng: 0,
     });
-    expect(created.body.fed).toBe(false);
-    expect(created.body.fedAt).toBeNull();
 
     const res = await authedRequest(app).patch(`/sightings/${created.body.id}`).send({ fed: true });
-
-    expect(res.status).toBe(200);
-    expect(res.body.fed).toBe(true);
-    expect(res.body.fedAt).toEqual(expect.any(String));
-  });
-
-  it('clears fedAt when fed is toggled back to false', async () => {
-    const created = await authedRequest(app).post('/sightings').send({
-      species: 'dog',
-      lat: 0,
-      lng: 0,
-    });
-    await authedRequest(app).patch(`/sightings/${created.body.id}`).send({ fed: true });
-
-    const res = await authedRequest(app).patch(`/sightings/${created.body.id}`).send({ fed: false });
 
     expect(res.status).toBe(200);
     expect(res.body.fed).toBe(false);

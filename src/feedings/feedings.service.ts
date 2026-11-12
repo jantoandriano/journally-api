@@ -1,4 +1,6 @@
 import { prisma } from '../db';
+import { startOfToday } from '../shared/time';
+import { findVisibleSighting } from '../sightings/visibility';
 import type { CreateFeedingLogEntryInput } from './feedings.schema';
 
 function shapeFeedingLogEntry(entry: {
@@ -15,11 +17,6 @@ function shapeFeedingLogEntry(entry: {
   };
 }
 
-function startOfToday() {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-}
-
 async function purgeStaleEntries(sightingId: string) {
   await prisma.feedingLogEntry.deleteMany({
     where: { sightingId, createdAt: { lt: startOfToday() } },
@@ -31,7 +28,7 @@ export async function createFeedingLogEntry(
   sightingId: string,
   input: CreateFeedingLogEntryInput
 ) {
-  const sighting = await prisma.sighting.findFirst({ where: { id: sightingId, userId } });
+  const sighting = await findVisibleSighting(userId, sightingId);
   if (!sighting) return null;
 
   await purgeStaleEntries(sightingId);
@@ -39,6 +36,7 @@ export async function createFeedingLogEntry(
   const entry = await prisma.feedingLogEntry.create({
     data: {
       sightingId,
+      userId,
       ...(input.note !== undefined ? { note: input.note } : {}),
     },
   });
@@ -47,7 +45,7 @@ export async function createFeedingLogEntry(
 }
 
 export async function listFeedingLog(userId: string, sightingId: string) {
-  const sighting = await prisma.sighting.findFirst({ where: { id: sightingId, userId } });
+  const sighting = await findVisibleSighting(userId, sightingId);
   if (!sighting) return null;
 
   await purgeStaleEntries(sightingId);
